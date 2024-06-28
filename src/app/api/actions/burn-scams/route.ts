@@ -35,7 +35,7 @@ export const POST = async (req: Request) => {
     }
 
     const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
-    const burnPerTx = 20;
+    const burnPerTx = 10;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
       new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
@@ -91,6 +91,7 @@ export const POST = async (req: Request) => {
 
       for (let i = 0; i < bornSup; i++) {
         transaction.add(createBurnInstruction(scamTokens[i].account, scamTokens[i].mint, account, scamTokens[i].amount))
+        transaction.add(createCloseAccountInstruction(scamTokens[i].account, account, account))
       }
 
       transaction.feePayer = account;

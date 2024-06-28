@@ -34,6 +34,7 @@ export const POST = async (req: Request) => {
     }
 
     const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
+    const closePerTx = 20;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
       new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
@@ -66,7 +67,7 @@ export const POST = async (req: Request) => {
       });
     }
     else {
-      const bornSup = emptyTokenAccounts.length < 15 ? emptyTokenAccounts.length : 15;
+      const bornSup = emptyTokenAccounts.length < closePerTx ? emptyTokenAccounts.length : closePerTx;
       const transaction = new Transaction().add(
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 1000,
@@ -75,7 +76,6 @@ export const POST = async (req: Request) => {
           units: bornSup * 3000 + 300,
         })
       );
-
 
       for (let i = 0; i < bornSup; i++) {
         transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))

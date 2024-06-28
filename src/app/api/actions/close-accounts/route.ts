@@ -64,13 +64,13 @@ export const POST = async (req: Request) => {
       })
     );
 
-//     const bornSup = emptyTokenAccounts.length < 10 ? emptyTokenAccounts.length : 10;
+    const bornSup = emptyTokenAccounts.length < 10 ? emptyTokenAccounts.length : 10;
 
-//     for (let i = 0; i < bornSup; i++) {
-// const closeIx = await createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account);
+    for (let i = 0; i < bornSup; i++) {
+const closeIx = await createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account);
 
-//       transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
-//     }
+      transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
+    }
 
     transaction.feePayer = account;
 

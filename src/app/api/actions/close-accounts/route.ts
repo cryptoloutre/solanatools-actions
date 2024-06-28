@@ -58,6 +58,7 @@ export const POST = async (req: Request) => {
       return amount == 0;
     })
 
+    console.log(emptyTokenAccounts.length)
     if (emptyTokenAccounts.length == 0) {
       return new Response('No token account to close', {
         status: 400,
@@ -65,13 +66,16 @@ export const POST = async (req: Request) => {
       });
     }
     else {
+      const bornSup = emptyTokenAccounts.length < 15 ? emptyTokenAccounts.length : 15;
       const transaction = new Transaction().add(
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 1000,
+        }),
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: bornSup * 3000 + 300,
         })
       );
 
-      const bornSup = emptyTokenAccounts.length < 10 ? emptyTokenAccounts.length : 10;
 
       for (let i = 0; i < bornSup; i++) {
         transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
@@ -86,7 +90,7 @@ export const POST = async (req: Request) => {
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
           transaction,
-          message: "Close your empty token accounts",
+          message: "Empty token accounts closed!",
         },
       });
 

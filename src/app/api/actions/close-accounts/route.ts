@@ -40,12 +40,12 @@ export const POST = async (req: Request) => {
       {
         filters: [
           {
-            dataSize: 165, // number of bytes
+            dataSize: 165,
           },
           {
             memcmp: {
-              offset: 32, // number of bytes
-              bytes: account.toBase58(), // base58 encoded string
+              offset: 32,
+              bytes: account.toBase58(),
             },
           },
         ],
@@ -58,36 +58,43 @@ export const POST = async (req: Request) => {
       return amount == 0;
     })
 
-    const transaction = new Transaction().add(
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1000,
-      })
-    );
+    if (emptyTokenAccounts.length == 0) {
+      return new Response('No token account to close', {
+        status: 400,
+        headers: ACTIONS_CORS_HEADERS,
+      });
+    }
+    else {
+      const transaction = new Transaction().add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 1000,
+        })
+      );
 
-    const bornSup = emptyTokenAccounts.length < 10 ? emptyTokenAccounts.length : 10;
+      const bornSup = emptyTokenAccounts.length < 10 ? emptyTokenAccounts.length : 10;
 
-    for (let i = 0; i < bornSup; i++) {
-const closeIx = await createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account);
+      for (let i = 0; i < bornSup; i++) {
+        transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
+      }
 
-      transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
+      transaction.feePayer = account;
+
+      transaction.recentBlockhash = (
+        await connection.getLatestBlockhash()
+      ).blockhash;
+
+      const payload: ActionPostResponse = await createPostResponse({
+        fields: {
+          transaction,
+          message: "Close your empty token accounts",
+        },
+      });
+
+      return Response.json(payload, {
+        headers: ACTIONS_CORS_HEADERS,
+      });
     }
 
-    transaction.feePayer = account;
-
-    transaction.recentBlockhash = (
-      await connection.getLatestBlockhash()
-    ).blockhash;
-
-    const payload: ActionPostResponse = await createPostResponse({
-      fields: {
-        transaction,
-        message: "Close your empty token accounts",
-      },
-    });
-
-    return Response.json(payload, {
-      headers: ACTIONS_CORS_HEADERS,
-    });
   } catch (err) {
     console.log(err);
     let message = "An unknown error occurred";

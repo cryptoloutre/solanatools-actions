@@ -2,6 +2,7 @@ import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostR
 import { ComputeBudgetProgram, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { createBurnInstruction, createCloseAccountInstruction } from "@solana/spl-token";
 import { SCAM_TOKEN_LIST } from "@/utils/scamToken";
+import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, BURN_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
 
 
 export const GET = async (req: Request) => {
@@ -84,9 +85,9 @@ export const POST = async (req: Request) => {
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 1000,
         }),
-        // ComputeBudgetProgram.setComputeUnitLimit({
-        //   units: bornSup * 3000 + 300,
-        // })
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: bornSup * (BURN_CU + CLOSE_ACCOUNT_CU) + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU,
+        })
       );
 
       for (let i = 0; i < bornSup; i++) {

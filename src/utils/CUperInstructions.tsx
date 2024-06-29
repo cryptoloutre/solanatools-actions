@@ -1,0 +1,4 @@
+export const BURN_CU = 4800;
+export const CLOSE_ACCOUNT_CU = 3000;
+export const ADD_COMPUTE_UNIT_PRICE_CU = 150;
+export const ADD_COMPUTE_UNIT_LIMIT_CU = 150;

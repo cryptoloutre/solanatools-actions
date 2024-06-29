@@ -1,6 +1,7 @@
 import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, createPostResponse } from "@solana/actions";
 import { ComputeBudgetProgram, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { createCloseAccountInstruction } from "@solana/spl-token";
+import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
 
 
 export const GET = async (req: Request) => {
@@ -74,7 +75,7 @@ export const POST = async (req: Request) => {
           microLamports: 1000,
         }),
         ComputeBudgetProgram.setComputeUnitLimit({
-          units: bornSup * 3000 + 300,
+          units: bornSup * CLOSE_ACCOUNT_CU + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU,
         })
       );
 

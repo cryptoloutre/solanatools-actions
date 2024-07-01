@@ -13,11 +13,9 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import { createCloseAccountInstruction } from "@solana/spl-token";
 import {
   ADD_COMPUTE_UNIT_LIMIT_CU,
   ADD_COMPUTE_UNIT_PRICE_CU,
-  CLOSE_ACCOUNT_CU,
   SOL_TRANSFER_CU,
 } from "@/utils/CUperInstructions";
 import { DEFAULT_SOL_ADDRESS, DEFAULT_SOL_AMOUNT } from "./const";
@@ -28,7 +26,7 @@ export const GET = async (req: Request) => {
     const { toPubkey } = validatedQueryParams(requestUrl);
 
     const baseHref = new URL(
-      `/api/actions/transfer-sol?to=${toPubkey.toBase58()}`,
+      `/api/actions/donate-sol?to=${toPubkey.toBase58()}`,
       requestUrl.origin,
     ).toString();
 

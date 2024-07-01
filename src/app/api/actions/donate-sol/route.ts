@@ -39,15 +39,15 @@ export const GET = async (req: Request) => {
         actions: [
           {
             label: "Send 0.1 SOL",
-            href: `${baseHref}&amount=${"1"}`,
+            href: `${baseHref}&amount=${"0.1"}`,
           },
           {
             label: "Send 0.5 SOL",
-            href: `${baseHref}&amount=${"5"}`,
+            href: `${baseHref}&amount=${"0.5"}`,
           },
           {
             label: "Send 1 SOL",
-            href: `${baseHref}&amount=${"10"}`,
+            href: `${baseHref}&amount=${"1"}`,
           },
           {
             label: "Send SOL",

@@ -8,7 +8,7 @@ export const GET = async (req: Request) => {
   const payload: ActionGetResponse = {
     title: "Close your empty token accounts",
     icon: new URL("/solanatools.jpg", new URL(req.url).origin).toString(),
-    description: "Close your empty token accounts & get SOL back",
+    description: "Close your empty token accounts & get SOL back. You will close 20 empty token accounts at a time and earn 0.002 SOL per account.",
     label: "Close Accounts",
   };
 
@@ -89,10 +89,14 @@ export const POST = async (req: Request) => {
         await connection.getLatestBlockhash()
       ).blockhash;
 
+      let message = `🎉${bornSup} empty token accounts closed!`;
+      if (emptyTokenAccounts.length > closePerTx) {
+        message = message + `There are still ${emptyTokenAccounts.length - closePerTx} empty token accounts to close. Refresh the page and close again.`;
+      }
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
           transaction,
-          message: "Empty token accounts closed!",
+          message: message,
         },
       });
 

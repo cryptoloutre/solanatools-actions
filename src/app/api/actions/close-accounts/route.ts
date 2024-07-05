@@ -107,7 +107,7 @@ export const POST = async (req: Request) => {
 
   } catch (err) {
     console.log(err);
-    let message = "An unknown error occurred";
+    let message = JSON.parse("An unknown error occurred");
     if (typeof err == "string") message = JSON.parse(err);
     return new Response(message, {
       status: 400,

@@ -62,11 +62,12 @@ export const POST = async (req: Request) => {
 
     console.log(emptyTokenAccounts.length)
     if (emptyTokenAccounts.length == 0) {
-      const message: string = "No token account to close";
-      return new Response(message, {
-        status: 400,
-        headers: ACTIONS_CORS_HEADERS,
-      });
+      throw "No token account to close";
+      // const message: string = "No token account to close";
+      // return new Response(message, {
+      //   status: 400,
+      //   headers: ACTIONS_CORS_HEADERS,
+      // });
     }
     else {
       const bornSup = emptyTokenAccounts.length < closePerTx ? emptyTokenAccounts.length : closePerTx;

@@ -63,7 +63,7 @@ export const POST = async (req: Request) => {
     console.log(emptyTokenAccounts.length)
     if (emptyTokenAccounts.length == 0) {
       const message = "No token account to close";
-      return new Response(message, {
+      return new Response(JSON.stringify(message), {
         status: 400,
         headers: ACTIONS_CORS_HEADERS,
       });

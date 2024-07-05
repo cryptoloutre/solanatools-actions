@@ -8,7 +8,7 @@ export const GET = async (req: Request) => {
   const payload: ActionGetResponse = {
     title: "Close your empty token accounts",
     icon: new URL("/solanatools.jpg", new URL(req.url).origin).toString(),
-    description: "Close your empty token accounts & get SOL back. You will close 20 empty token accounts at a time and earn 0.002 SOL per account.",
+    description: "Close your empty token accounts & get SOL back. You will close 20 empty token accounts at a time and earn ~0.002 SOL per account.",
     label: "Close Accounts",
   };
 
@@ -35,7 +35,7 @@ export const POST = async (req: Request) => {
     }
 
     const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
-    const closePerTx = 20;
+    const closePerTx = 1;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
       new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),

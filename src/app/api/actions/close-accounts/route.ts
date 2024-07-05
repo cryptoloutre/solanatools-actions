@@ -63,7 +63,7 @@ export const POST = async (req: Request) => {
     console.log(emptyTokenAccounts.length)
     if (emptyTokenAccounts.length == 0) {
       const message = "No token account to close";
-      return new Response(JSON.parse(message), {
+      return new Response(message, {
         status: 400,
         headers: ACTIONS_CORS_HEADERS,
       });
@@ -107,8 +107,8 @@ export const POST = async (req: Request) => {
 
   } catch (err) {
     console.log(err);
-    let message = JSON.parse("An unknown error occurred");
-    if (typeof err == "string") message = JSON.parse(err);
+    let message = "An unknown error occurred";
+    if (typeof err == "string") message = err;
     return new Response(message, {
       status: 400,
       headers: ACTIONS_CORS_HEADERS,

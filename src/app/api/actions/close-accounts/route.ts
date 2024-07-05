@@ -35,7 +35,7 @@ export const POST = async (req: Request) => {
     }
 
     const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
-    const closePerTx = 1;
+    const closePerTx = 20;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
       new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),

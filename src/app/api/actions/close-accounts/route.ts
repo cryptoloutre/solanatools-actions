@@ -89,7 +89,7 @@ export const POST = async (req: Request) => {
         await connection.getLatestBlockhash()
       ).blockhash;
 
-      let message = `🎉${bornSup} empty token accounts closed!`;
+      let message = `🎉 ${bornSup} empty token accounts closed! `;
       if (emptyTokenAccounts.length > closePerTx) {
         message = message + `There are still ${emptyTokenAccounts.length - closePerTx} empty token accounts to close. Refresh the page and close again.`;
       }

@@ -28,7 +28,7 @@ export const GET = async (req: Request) => {
     title: "Burn scam tokens",
     icon: new URL("/solanatools.jpg", new URL(req.url).origin).toString(),
     description:
-      "Burn scam tokens & get SOL back. You will burn 10 NFTs at a time and earn 0.002 SOL per NFT.",
+      "Burn scam tokens & get SOL back. You will burn 10 NFTs at a time and earn ~0.002 SOL per NFT.",
     label: "Burn Scams",
   };
 
@@ -140,7 +140,7 @@ export const POST = async (req: Request) => {
         await connection.getLatestBlockhash()
       ).blockhash;
 
-      let message = `🎉${bornSup} scam tokens burned!`;
+      let message = `🎉 ${bornSup} scam tokens burned! `;
       if (scamTokens.length > burnPerTx) {
         message = message + `There are still ${scamTokens.length - burnPerTx} scam tokens to burn. Refresh the page and burn again.`;
       }

@@ -21,7 +21,6 @@ export const GET = async (req: Request) => {
 
 export const OPTIONS = GET;
 
-
 export const POST = async (req: Request) => {
   try {
     const body: ActionPostRequest = await req.json();
@@ -53,35 +52,38 @@ export const POST = async (req: Request) => {
             },
           },
         ],
-      }
+      },
     );
-    const scamTokens: { mint: PublicKey, account: PublicKey, amount: number }[] = [];
+    const scamTokens: {
+      mint: PublicKey;
+      account: PublicKey;
+      amount: number;
+    }[] = [];
 
     tokenAccounts.map((tokenAccount: any) => {
       const mint = tokenAccount.account?.data?.parsed?.info?.mint;
-      const amount = tokenAccount.account?.data?.parsed?.info?.tokenAmount.amount;
+      const amount =
+        tokenAccount.account?.data?.parsed?.info?.tokenAmount.amount;
       if (SCAM_TOKEN_LIST.includes(mint) && amount != 0) {
         const account = tokenAccount.pubkey;
         //@ts-ignore
         scamTokens.push({
           mint: new PublicKey(mint),
           account: account,
-          amount: amount
-        })
+          amount: amount,
+        });
       }
-    })
+    });
 
-    console.log(scamTokens.length)
-    console.log(scamTokens)
     if (scamTokens.length == 0) {
       const message = "No scam token to burn";
       return new Response(message, {
         status: 400,
         headers: ACTIONS_CORS_HEADERS,
       });
-    }
-    else {
-      const bornSup = scamTokens.length < burnPerTx ? scamTokens.length : burnPerTx;
+    } else {
+      const bornSup =
+        scamTokens.length < burnPerTx ? scamTokens.length : burnPerTx;
       const transaction = new Transaction().add(
         new TransactionInstruction({
           programId: new PublicKey(MEMO_PROGRAM_ID),
@@ -107,8 +109,21 @@ export const POST = async (req: Request) => {
       });
 
       for (let i = 0; i < bornSup; i++) {
-        transaction.add(createBurnInstruction(scamTokens[i].account, scamTokens[i].mint, account, scamTokens[i].amount))
-        transaction.add(createCloseAccountInstruction(scamTokens[i].account, account, account))
+        transaction.add(
+          createBurnInstruction(
+            scamTokens[i].account,
+            scamTokens[i].mint,
+            account,
+            scamTokens[i].amount,
+          ),
+        );
+        transaction.add(
+          createCloseAccountInstruction(
+            scamTokens[i].account,
+            account,
+            account,
+          ),
+        );
       }
 
       transaction.feePayer = account;
@@ -132,7 +147,6 @@ export const POST = async (req: Request) => {
         headers: ACTIONS_CORS_HEADERS,
       });
     }
-
   } catch (err) {
     console.log(err);
     let message = "An unknown error occurred";

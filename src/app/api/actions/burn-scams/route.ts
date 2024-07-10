@@ -1,15 +1,16 @@
-import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, createPostResponse } from "@solana/actions";
-import { ComputeBudgetProgram, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, MEMO_PROGRAM_ID, createPostResponse } from "@solana/actions";
+import { ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { createBurnInstruction, createCloseAccountInstruction } from "@solana/spl-token";
 import { SCAM_TOKEN_LIST } from "@/utils/scamToken";
 import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, BURN_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
+import { AUTHORITY, RPC_URL } from "@/utils/config";
 
 
 export const GET = async (req: Request) => {
   const payload: ActionGetResponse = {
     title: "Burn scam tokens",
     icon: new URL("/solanatools.jpg", new URL(req.url).origin).toString(),
-    description: "Burn scam tokens & get SOL back",
+    description: "Burn scam tokens & get SOL back. You will burn 10 scam tokens at a time and earn ~0.002 SOL per token.",
     label: "Burn Scams",
   };
 
@@ -35,7 +36,7 @@ export const POST = async (req: Request) => {
       });
     }
 
-    const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
+    const connection = new Connection(RPC_URL);
     const burnPerTx = 10;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
@@ -82,13 +83,28 @@ export const POST = async (req: Request) => {
     else {
       const bornSup = scamTokens.length < burnPerTx ? scamTokens.length : burnPerTx;
       const transaction = new Transaction().add(
+        new TransactionInstruction({
+          programId: new PublicKey(MEMO_PROGRAM_ID),
+          data: Buffer.from("burnt", "utf8"),
+          keys: [],
+        }),
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 1000,
         }),
         ComputeBudgetProgram.setComputeUnitLimit({
-          units: bornSup * (BURN_CU + CLOSE_ACCOUNT_CU) + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU,
+          units: bornSup * (BURN_CU + CLOSE_ACCOUNT_CU) + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU +
+            3300,
         })
       );
+
+      const NON_MEMO_IX_INDEX = 1;
+
+      // inject an authority key to track this transaction on chain
+      transaction.instructions[NON_MEMO_IX_INDEX].keys.push({
+        pubkey: AUTHORITY,
+        isWritable: false,
+        isSigner: false,
+      });
 
       for (let i = 0; i < bornSup; i++) {
         transaction.add(createBurnInstruction(scamTokens[i].account, scamTokens[i].mint, account, scamTokens[i].amount))
@@ -101,10 +117,14 @@ export const POST = async (req: Request) => {
         await connection.getLatestBlockhash()
       ).blockhash;
 
+      let message = `🎉 ${bornSup} scam tokens burned! `;
+      if (scamTokens.length > burnPerTx) {
+        message = message + `There are still ${scamTokens.length - burnPerTx} scam tokens to burn. Refresh the page and burn again.`;
+      }
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
           transaction,
-          message: "Scam tokens burned!",
+          message: message,
         },
       });
 

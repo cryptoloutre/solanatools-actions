@@ -1,14 +1,15 @@
-import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, createPostResponse } from "@solana/actions";
-import { ComputeBudgetProgram, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, MEMO_PROGRAM_ID, createPostResponse } from "@solana/actions";
+import { ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { createCloseAccountInstruction } from "@solana/spl-token";
 import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
+import { AUTHORITY, RPC_URL } from "@/utils/config";
 
 
 export const GET = async (req: Request) => {
   const payload: ActionGetResponse = {
     title: "Close your empty token accounts",
     icon: new URL("/solanatools.jpg", new URL(req.url).origin).toString(),
-    description: "Close your empty token accounts & get SOL back",
+    description: "Close your empty token accounts & get SOL back. You will close 20 empty token accounts at a time and earn ~0.002 SOL per account.",
     label: "Close Accounts",
   };
 
@@ -34,7 +35,7 @@ export const POST = async (req: Request) => {
       });
     }
 
-    const connection = new Connection("https://mainnet.helius-rpc.com/?api-key=194196fa-41b1-48f1-82dc-9b4d6ba2bb6c");
+    const connection = new Connection(RPC_URL);
     const closePerTx = 20;
 
     const tokenAccounts = await connection.getParsedProgramAccounts(
@@ -71,13 +72,28 @@ export const POST = async (req: Request) => {
     else {
       const bornSup = emptyTokenAccounts.length < closePerTx ? emptyTokenAccounts.length : closePerTx;
       const transaction = new Transaction().add(
+        new TransactionInstruction({
+          programId: new PublicKey(MEMO_PROGRAM_ID),
+          data: Buffer.from("closed", "utf8"),
+          keys: [],
+        }),
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 1000,
         }),
         ComputeBudgetProgram.setComputeUnitLimit({
-          units: bornSup * CLOSE_ACCOUNT_CU + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU,
+          units: bornSup * CLOSE_ACCOUNT_CU + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU +
+          3650,
         })
       );
+
+      const NON_MEMO_IX_INDEX = 1;
+
+      // inject an authority key to track this transaction on chain
+      transaction.instructions[NON_MEMO_IX_INDEX].keys.push({
+        pubkey: AUTHORITY,
+        isWritable: false,
+        isSigner: false,
+      });
 
       for (let i = 0; i < bornSup; i++) {
         transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
@@ -89,10 +105,14 @@ export const POST = async (req: Request) => {
         await connection.getLatestBlockhash()
       ).blockhash;
 
+      let message = `🎉 ${bornSup} empty token accounts closed! `;
+      if (emptyTokenAccounts.length > closePerTx) {
+        message = message + `There are still ${emptyTokenAccounts.length - closePerTx} empty token accounts to close. Refresh the page and close again.`;
+      }
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
           transaction,
-          message: "Empty token accounts closed!",
+          message: message,
         },
       });
 

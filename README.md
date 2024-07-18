@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Modify the `src/app/api/actions/close-accounts/route.ts` file with our own transaction. Check out [Dialect's documention](https://dashboard.dialect.to/actions) to know how to build, test and deploy your Action. 
+Modify the `src/app/api/actions/close-accounts/route.ts` file with our own transaction. Check out [Dialect's documentation](https://dashboard.dialect.to/actions) to know how to build, test and deploy your Action. 
 
 ## Deploy on Vercel
 

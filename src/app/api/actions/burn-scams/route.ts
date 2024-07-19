@@ -1,9 +1,10 @@
 import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, MEMO_PROGRAM_ID, createPostResponse } from "@solana/actions";
 import { ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { createBurnInstruction, createCloseAccountInstruction } from "@solana/spl-token";
+import { createBurnInstruction, createCloseAccountInstruction, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { SCAM_TOKEN_LIST } from "@/utils/scamToken";
 import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, BURN_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
 import { AUTHORITY, RPC_URL } from "@/utils/config";
+import { getScams } from "@/utils/getScams";
 
 
 export const GET = async (req: Request) => {
@@ -38,42 +39,12 @@ export const POST = async (req: Request) => {
     const connection = new Connection(RPC_URL);
     const burnPerTx = 10;
 
-    const tokenAccounts = await connection.getParsedProgramAccounts(
-      new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-      {
-        filters: [
-          {
-            dataSize: 165,
-          },
-          {
-            memcmp: {
-              offset: 32,
-              bytes: account.toBase58(),
-            },
-          },
-        ],
-      },
-    );
-    const scamTokens: {
-      mint: PublicKey;
-      account: PublicKey;
-      amount: number;
-    }[] = [];
+    const regularScams = await getScams(account, connection, TOKEN_PROGRAM_ID);
+    const token2022Scams = await getScams(account, connection, TOKEN_2022_PROGRAM_ID);
 
-    tokenAccounts.map((tokenAccount: any) => {
-      const mint = tokenAccount.account?.data?.parsed?.info?.mint;
-      const amount =
-        tokenAccount.account?.data?.parsed?.info?.tokenAmount.amount;
-      if (SCAM_TOKEN_LIST.includes(mint) && amount != 0) {
-        const account = tokenAccount.pubkey;
-        //@ts-ignore
-        scamTokens.push({
-          mint: new PublicKey(mint),
-          account: account,
-          amount: amount,
-        });
-      }
-    });
+    const scamTokens = regularScams.concat(token2022Scams);
+
+    console.log("Number of accounts to close: ", scamTokens.length)
 
     if (scamTokens.length == 0) {
       const message = "No scam token to burn";

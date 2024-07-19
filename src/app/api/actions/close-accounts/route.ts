@@ -1,8 +1,9 @@
 import { ACTIONS_CORS_HEADERS, ActionGetResponse, ActionPostRequest, ActionPostResponse, MEMO_PROGRAM_ID, createPostResponse } from "@solana/actions";
 import { ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { createCloseAccountInstruction } from "@solana/spl-token";
+import { createCloseAccountInstruction, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { ADD_COMPUTE_UNIT_LIMIT_CU, ADD_COMPUTE_UNIT_PRICE_CU, CLOSE_ACCOUNT_CU } from "@/utils/CUperInstructions";
 import { AUTHORITY, RPC_URL } from "@/utils/config";
+import { getEmptyTokenAccounts } from "@/utils/getEmptyTokenAccounts";
 
 
 export const GET = async (req: Request) => {
@@ -38,37 +39,14 @@ export const POST = async (req: Request) => {
     const connection = new Connection(RPC_URL);
     const closePerTx = 20;
 
-    const tokenAccounts = await connection.getParsedProgramAccounts(
-      new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-      {
-        filters: [
-          {
-            dataSize: 165,
-          },
-          {
-            memcmp: {
-              offset: 32,
-              bytes: account.toBase58(),
-            },
-          },
-        ],
-      }
-    );
+    const emptyTokenAccountsRegular = await getEmptyTokenAccounts(account, connection, TOKEN_PROGRAM_ID);
+    const emptyTokenAccounts2022 = await getEmptyTokenAccounts(account, connection, TOKEN_2022_PROGRAM_ID);
 
-    const emptyTokenAccounts = tokenAccounts.filter((m: any) => {
-      //@ts-ignore
-      const amount = m.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
-      return amount == 0;
-    })
+    const emptyTokenAccounts = emptyTokenAccountsRegular.concat(emptyTokenAccounts2022);
 
-    console.log(emptyTokenAccounts.length)
+    console.log("Number of accounts to close: ", emptyTokenAccounts.length)
     if (emptyTokenAccounts.length == 0) {
       throw "No token account to close";
-      // const message: string = "No token account to close";
-      // return new Response(message, {
-      //   status: 400,
-      //   headers: ACTIONS_CORS_HEADERS,
-      // });
     }
     else {
       const bornSup = emptyTokenAccounts.length < closePerTx ? emptyTokenAccounts.length : closePerTx;
@@ -83,7 +61,7 @@ export const POST = async (req: Request) => {
         }),
         ComputeBudgetProgram.setComputeUnitLimit({
           units: bornSup * CLOSE_ACCOUNT_CU + ADD_COMPUTE_UNIT_PRICE_CU + ADD_COMPUTE_UNIT_LIMIT_CU +
-          3650,
+            3650,
         })
       );
 
@@ -97,7 +75,7 @@ export const POST = async (req: Request) => {
       });
 
       for (let i = 0; i < bornSup; i++) {
-        transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i].pubkey, account, account))
+        transaction.add(createCloseAccountInstruction(emptyTokenAccounts[i], account, account))
       }
 
       transaction.feePayer = account;

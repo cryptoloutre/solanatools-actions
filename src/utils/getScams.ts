@@ -7,6 +7,7 @@ export async function getScams(owner: PublicKey, connection: Connection, program
         mint: PublicKey;
         account: PublicKey;
         amount: number;
+        program: PublicKey
       }[] = [];
     const accounts = (await connection.getTokenAccountsByOwner(owner, { programId: program })).value;
 
@@ -19,6 +20,7 @@ export async function getScams(owner: PublicKey, connection: Connection, program
                     mint: new PublicKey(mint),
                     account: account.pubkey,
                     amount: Number(amount),
+                    program: program
                 });
             }
     })

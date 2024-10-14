@@ -1,8 +1,9 @@
 import {
-  ACTIONS_CORS_HEADERS,
+  ActionError,
   ActionGetResponse,
   ActionPostRequest,
   ActionPostResponse,
+  createActionHeaders,
   createPostResponse,
 } from "@solana/actions";
 import {
@@ -19,6 +20,9 @@ import {
   SOL_TRANSFER_CU,
 } from "@/utils/CUperInstructions";
 import { DEFAULT_SOL_ADDRESS, DEFAULT_SOL_AMOUNT } from "./const";
+
+// create the standard headers for this route (including CORS)
+const headers = createActionHeaders();
 
 export const GET = async (req: Request) => {
   try {
@@ -40,18 +44,22 @@ export const GET = async (req: Request) => {
           {
             label: "Send 0.1 SOL",
             href: `${baseHref}&amount=${"0.1"}`,
+            type: "transaction"
           },
           {
             label: "Send 0.5 SOL",
             href: `${baseHref}&amount=${"0.5"}`,
+            type: "transaction"
           },
           {
             label: "Send 1 SOL",
             href: `${baseHref}&amount=${"1"}`,
+            type: "transaction"
           },
           {
             label: "Send SOL",
             href: `${baseHref}&amount={amount}`,
+            type: "transaction",
             parameters: [
               {
                 name: "amount",
@@ -65,7 +73,7 @@ export const GET = async (req: Request) => {
     };
 
     return Response.json(payload, {
-      headers: ACTIONS_CORS_HEADERS,
+      headers,
     });
   } catch (err) {
     console.log(err);
@@ -73,12 +81,12 @@ export const GET = async (req: Request) => {
     if (typeof err == "string") message = err;
     return new Response(message, {
       status: 400,
-      headers: ACTIONS_CORS_HEADERS,
+      headers,
     });
   }
 };
 
-export const OPTIONS = GET;
+export const OPTIONS = async () => Response.json(null, { headers });
 
 export const POST = async (req: Request) => {
   try {
@@ -92,7 +100,7 @@ export const POST = async (req: Request) => {
     } catch (err) {
       return new Response('Invalid "account" provided', {
         status: 400,
-        headers: ACTIONS_CORS_HEADERS,
+        headers,
       });
     }
 
@@ -138,19 +146,20 @@ export const POST = async (req: Request) => {
       fields: {
         transaction,
         message: `Send ${amount} SOL to ${toPubkey.toBase58()}`,
+        type: 'transaction'
       },
     });
 
     return Response.json(payload, {
-      headers: ACTIONS_CORS_HEADERS,
+      headers,
     });
   } catch (err) {
     console.log(err);
-    let message = "An unknown error occurred";
-    if (typeof err == "string") message = err;
-    return new Response(message, {
+    let actionError: ActionError = { message: "An unknown error occurred" };
+    if (typeof err == "string") actionError.message = err;
+    return Response.json(actionError, {
       status: 400,
-      headers: ACTIONS_CORS_HEADERS,
+      headers,
     });
   }
 };

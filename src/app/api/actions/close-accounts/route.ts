@@ -114,7 +114,7 @@ export const POST = async (req: Request) => {
         isSigner: false,
       });
 
-      for (let i = 0; i < bornSup-1; i++) {
+      for (let i = 0; i < bornSup; i++) {
         transaction.add(
           createCloseAccountInstruction(
             emptyTokenAccounts[i].account,
